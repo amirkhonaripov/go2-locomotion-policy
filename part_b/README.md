@@ -39,3 +39,32 @@ Overall, the policy ended up preferring balance over speed, and Go2 stood and tu
 Also, I had attributed the undershooting to the possible physical limitations of the Go2's sideways motion, but the policy failed at slow commands as well, so I think that the weak reward signal is a better explanation for this performance.
 
 The video confirms that the robots do not move: the blue arrows (velocity) stay near zero while the green arrows (commands) are long.
+
+## Results (wide-range trained 3x longer)
+![TensorBoard comparison of default, wide-range, and wide-range 3× runs](tensorboard_default_wide_wide3x.png)
+
+| Metric (final iteration) | Default (±1 m/s, 300 it.) | Wide (±2 m/s, 300 it.) | Wide 3× (±2 m/s, 900 it.) |
+|---|---|---|---|
+| `error_vel_xy` (m/s) | 0.107 | 1.539 | 1.438 |
+| `success_rate` | 1.0 | 0.0 | 0.005 |
+| `base_contact` | 0.0061 | 0.0068 | 0.0093 |
+| `error_vel_yaw` (rad/s) | 0.188 | 0.170 | 0.149 |
+| `track_lin_vel_xy_exp` reward | 1.408 | 0.092 | 0.089 |
+| `track_ang_vel_z_exp` reward | 0.625 | 0.643 | 0.663 |
+
+## Discussion
+1. Did more training time fix it?
+No, `error_vel_xy` stayed flat ~1.45, `success_rate` stayed at ~0, and the `track_lin_vel_xy_exp` reward stayed at ~0.09. The policy did not learn to move, and the only improvement was turning (`error_vel_yaw`)
+
+I expected the `success_rate` and `error_vel_xy` to improve given more time for training, even if slightly, but the raw values ended up with the noise). 
+
+2. What this rules out
+The initial failure of the wide-range policy was not caused by insufficient training time. Even at 3x more training time, the policy did not learn to move at all. Much longer training was not tested, however, so I cannot claim that it won't work at all if given even more time, but I expect it not to.
+
+3. What it suggests
+The problem comes down to the tracking reward giving almost no feedback for moving towards fast commands, so the policy ends up choosing the stable strategy of standing, crouching, and turning. Widening the tracking tolerance could help. It could also be combined with starting at the default +-1 range and widening it as the policy succeeds, so that the policy is not stuck with no movement right from the beginning (not tested).
+
+The 3x video (`wide_3x.mp4) looks the same as the wide one: the robots crouch, turn in place, and their velocity (blue arrows) stays near zero.
+
+
+
