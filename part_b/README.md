@@ -1,5 +1,8 @@
+## Setup
+The range is set in `CommandsCfg` in `isaaclab_tasks/manager_based/locomotion/velocity/velocity_env_cfg.py` (line 149).
+
 ## Prediction, before training the wide-range policy (Oct 16, 1:31am)
-I widened `lin_vel_x` and `lin_vel_y`, which are forward/backward and sideways inputs, respectively, from (-1, 1) to (-2, 2) m/s. `ang_vel_z` is left unchanged.
+I widened `lin_vel_x` and `lin_vel_y`, which are forward/backward and sideways inputs, respectively, from (-1, 1) to (-2, 2) m/s. `ang_vel_z` is left unchanged. 
 
 **Physical feasibility:** According to Unitree's specs ([unitree.com/go2](https://www.unitree.com/go2/)), the Go2's top forward speed is 2.5-3.7 m/s depending on the model, so +-2 m/s forward is physically plausible. However, I could not verify if the sideways speed can reach +-2 m/s as well. Although possible, I expect the robot to undershoot fast `lin_vel_y` commands because moving sideways for a quadruped relies on hip joints with a smaller range of motion.
 
@@ -56,7 +59,7 @@ The video confirms that the robots do not move: the blue arrows (velocity) stay 
 1. Did more training time fix it?
 No, `error_vel_xy` stayed flat ~1.45, `success_rate` stayed at ~0, and the `track_lin_vel_xy_exp` reward stayed at ~0.09. The policy did not learn to move, and the only improvement was turning (`error_vel_yaw`)
 
-I expected the `success_rate` and `error_vel_xy` to improve given more time for training, even if slightly, but the raw values ended up with the noise). 
+I expected the `success_rate` and `error_vel_xy` to improve given more time for training, even if slightly, but the raw values stayed within the noise. 
 
 2. What this rules out
 The initial failure of the wide-range policy was not caused by insufficient training time. Even at 3x more training time, the policy did not learn to move at all. Much longer training was not tested, however, so I cannot claim that it won't work at all if given even more time, but I expect it not to.
@@ -64,7 +67,7 @@ The initial failure of the wide-range policy was not caused by insufficient trai
 3. What it suggests
 The problem comes down to the tracking reward giving almost no feedback for moving towards fast commands, so the policy ends up choosing the stable strategy of standing, crouching, and turning. Widening the tracking tolerance could help. It could also be combined with starting at the default +-1 range and widening it as the policy succeeds, so that the policy is not stuck with no movement right from the beginning (not tested).
 
-The 3x video (`wide_3x.mp4) looks the same as the wide one: the robots crouch, turn in place, and their velocity (blue arrows) stays near zero.
+The 3x video (`wide_3x.mp4`) looks the same as the wide one: the robots crouch, turn in place, and their velocity (blue arrows) stays near zero.
 
 
 
